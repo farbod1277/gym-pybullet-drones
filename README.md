@@ -1,3 +1,6 @@
+## NOTE for imitation
+You need this [repo](https://github.com/farbod1277/imitation) installed as it's a dependency for the imitation implementations
+
 # NOTE
 This repository's `master` branch is actively developed, please `git pull` frequently and feel free to open new [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) for any undesired, unexpected, or (presumably) incorrect behavior. Thanks 🙏
 
