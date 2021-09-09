@@ -60,3 +60,11 @@ register(
     id='meetup-aviary-v0',
     entry_point='gym_pybullet_drones.envs.multi_agent_rl:MeetupAviary',
 )
+
+
+
+
+register(
+    id='imitation-learning-expert-aviary-v0',
+    entry_point='gym_pybullet_drones.envs.imitation_learning:ImitationLearningExpertAviary'
+)

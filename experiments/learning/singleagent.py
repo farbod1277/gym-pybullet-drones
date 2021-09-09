@@ -56,11 +56,12 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
-    parser.add_argument('--env',        default='hover',      type=str,             choices=['takeoff', 'hover', 'flythrugate', 'tune'], help='Task (default: hover)', metavar='')
-    parser.add_argument('--algo',       default='ppo',        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
-    parser.add_argument('--obs',        default='kin',        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
-    parser.add_argument('--act',        default='one_d_rpm',  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
-    parser.add_argument('--cpu',        default='1',          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
+    parser.add_argument('--env',        default='flythrugate',      type=str,             choices=['takeoff', 'hover', 'flythrugate', 'tune'],                   help='Task (default: flythrugate)', metavar='')
+    parser.add_argument('--algo',       default='ppo',        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg', 'ppo_pretrained'],        help='RL agent (default: ppo)', metavar='')
+    parser.add_argument('--obs',        default='kin',        type=ObservationType,                                                                        help='Observation space (default: kin)', metavar='')
+    parser.add_argument('--act',        default='dyn',  type=ActionType,                                                                             help='Action space (default: dyn)', metavar='')
+    parser.add_argument('--cpu',        default='12',          type=int,                                                                                    help='Number of training environments (default: 12)', metavar='')        
+    parser.add_argument('--model_path', default=None,         type=str,                                                                                    help='Continue training from this model')
     ARGS = parser.parse_args()
 
     #### Save directory ########################################
@@ -193,6 +194,10 @@ if __name__ == "__main__":
                                                                 verbose=1
                                                                 )
 
+    #### Continue from pre trained model
+    if ARGS.algo == 'ppo_pretrained':
+        model = PPO.load()
+
     #### Create eveluation environment #########################
     if ARGS.obs == ObservationType.KIN: 
         eval_env = gym.make(env_name,
@@ -228,7 +233,7 @@ if __name__ == "__main__":
         eval_env = VecTransposeImage(eval_env)
 
     #### Train the model #######################################
-    # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
+    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD,
                                                      verbose=1
                                                      )
@@ -239,14 +244,14 @@ if __name__ == "__main__":
                                  log_path=filename+'/',
                                  eval_freq=int(2000/ARGS.cpu),
                                  deterministic=True,
-                                 render=False
+                                 render=True
                                  )
-    model.learn(total_timesteps=35000, #int(1e12),
+    model.learn(total_timesteps=int(1e12),
                 callback=eval_callback,
                 log_interval=100,
                 )
 
-    #### Save the model ########################################
+    #### Save the model ########################################https://stable-baselines.readthedocs.io/en/master/modules/a2c.html
     model.save(filename+'/success_model.zip')
     print(filename)
 
