@@ -14,6 +14,8 @@ Notes
 The drone moves toward the centre of a gate randomly generated at different locations.
 
 """
+import pickle
+from imitation.data.types import Trajectory
 import os
 import time
 import argparse
@@ -29,7 +31,7 @@ import matplotlib.pyplot as plt
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.control.DSLPIDControlDyn import DSLPIDControlDyn
-from gym_pybullet_drones.envs.DynAviary import DynAviary
+from gym_pybullet_drones.envs.imitation.DynAviaryWGoal import DynAviaryWGoal
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--plot',               default=True,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--user_debug_gui',     default=False,      type=str2bool,      help='Whether to add debug lines and parameters to the GUI (default: False)', metavar='')
     parser.add_argument('--aggregate',          default=True,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
-    parser.add_argument('--obstacles',          default=True,       type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
+    parser.add_argument('--obstacles',          default=False,       type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
     parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
@@ -62,15 +64,16 @@ if __name__ == "__main__":
 
     #### Initialize wapoint at centre of gate ######################
     PERIOD = 10
-    NUM_WP = 2
+    NUM_WP = 1
     wp_counter = 0
     TARGET_POS = np.zeros((NUM_WP,3))
     TARGET_POS[0, :] = np.array([2, 0, 1])
-    TARGET_POS[1, :] = np.array([3, 5, 4])
+    # TARGET_POS[1, :] = np.array([3, 5, 4])
 
     #### Create the environment ##
     if ARGS.ctrl_mode == "dyn":
-        env = DynAviary(drone_model=ARGS.drone,
+        env = DynAviaryWGoal(goal_pose=TARGET_POS[0, :],
+                            drone_model=ARGS.drone,
                             num_drones=ARGS.num_drones,
                             initial_xyzs=INIT_XYZS,
                             initial_rpys=INIT_RPYS,
@@ -113,6 +116,12 @@ if __name__ == "__main__":
         else:
             ctrl = [DSLPIDControl(drone_model=ARGS.drone) for i in range(ARGS.num_drones)]
 
+    #### Initialize data structure for storing expert Trajectories
+    trajectories = Trajectory(obs=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS),23)),
+                              acts=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1,4)),
+                              infos=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1,1)),
+                              terminal=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1,1)))
+
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
     action = {str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones)}
@@ -120,9 +129,12 @@ if __name__ == "__main__":
     for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
         
         #### Step the simulation ###################################
-        obs, reward, done, info = env.step(action)
+        obs, _, done, _ = env.step(action)
 
-        if i >= int(5*env.SIM_FREQ): wp_counter = 1
+        trajectories.obs[int(i/AGGR_PHY_STEPS), :] = np.concatenate([obs[str(0)]["state"], obs[str(0)]["goal"]])
+        if int(i/5) < ((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1)): trajectories.acts[int(i/AGGR_PHY_STEPS), :] = action[str(0)]
+
+        # if i >= int(5*env.SIM_FREQ): wp_counter = 1
 
         #### Compute control at the desired frequency ##############
         if i%CTRL_EVERY_N_STEPS == 0:
@@ -150,6 +162,10 @@ if __name__ == "__main__":
         #### Sync the simulation ###################################
         if ARGS.gui:
             sync(i, START, env.TIMESTEP)
+
+    #### Save trajectories in a pickle file ########################
+    with open("expert_trajectories.pkl", "wb") as f:
+        pickle.dump(trajectories, f)
 
     #### Close the environment #################################
     env.close()
