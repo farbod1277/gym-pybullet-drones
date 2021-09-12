@@ -65,8 +65,8 @@ if __name__ == "__main__":
     NUM_WP = 2
     wp_counter = 0
     TARGET_POS = np.zeros((NUM_WP,3))
-    TARGET_POS[0, :] = np.array([0, 0, 1])
-    TARGET_POS[1, :] = np.array([1, 0, 1])
+    TARGET_POS[0, :] = np.array([2, 0, 1])
+    TARGET_POS[1, :] = np.array([3, 5, 4])
 
     #### Create the environment ##
     if ARGS.ctrl_mode == "dyn":

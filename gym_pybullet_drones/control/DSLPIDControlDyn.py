@@ -1,3 +1,4 @@
+import os
 import math
 import numpy as np
 import pybullet as p
@@ -5,6 +6,8 @@ from scipy.spatial.transform import Rotation
 
 from gym_pybullet_drones.control.BaseControl import BaseControl
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
+
+import xml.etree.ElementTree as etxml
 
 class DSLPIDControlDyn(BaseControl):
     """PID control class for Crazyflies to output thrusts and torques instead of RPMs
@@ -43,10 +46,19 @@ class DSLPIDControlDyn(BaseControl):
         self.PWM2RPM_CONST = 4070.3
         self.MIN_PWM = 20000
         self.MAX_PWM = 65535
-        if self.DRONE_MODEL == DroneModel.CF2X:
+        self.URDF = self.DRONE_MODEL.value + ".urdf"
+        URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF).getroot()
+        self.L = float(URDF_TREE[0].attrib['arm'])
+        self.THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib['thrust2weight'])
+        self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY) / (4*self.KF))        
+        self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
+        self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
+        if self.DRONE_MODEL == DroneModel.CF2X:            
+            self.MAX_XY_TORQUE = (2*self.L*self.KF*self.MAX_RPM**2)/np.sqrt(2)
             self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ])
         elif self.DRONE_MODEL == DroneModel.CF2P:
             self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
+            self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
         self.reset()
 
     ################################################################################
@@ -194,6 +206,7 @@ class DSLPIDControlDyn(BaseControl):
         target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
         if np.any(np.abs(target_euler) > math.pi):
             print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
+        scalar_thrust = np.clip(scalar_thrust, -self.MAX_THRUST/1.3, self.MAX_THRUST/1.3)
         return thrust, target_euler, pos_e, scalar_thrust
     
     ################################################################################
@@ -243,6 +256,8 @@ class DSLPIDControlDyn(BaseControl):
                          + np.multiply(self.D_COEFF_TOR, rpy_rates_e) \
                          + np.multiply(self.I_COEFF_TOR, self.integral_rpy_e)
         target_torques = np.clip(target_torques, -3200, 3200)
+        target_torques /= 6000
+        target_torques = np.multiply(target_torques, np.array([self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE]))
         return target_torques
     
     ################################################################################
