@@ -59,6 +59,8 @@ class DSLPIDControlDyn(BaseControl):
         elif self.DRONE_MODEL == DroneModel.CF2P:
             self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
             self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
+        self.THRUST_SCALE = 0.6
+        self.TORQUE_SCALE = 0.1
         self.reset()
 
     ################################################################################
@@ -206,7 +208,7 @@ class DSLPIDControlDyn(BaseControl):
         target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
         if np.any(np.abs(target_euler) > math.pi):
             print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
-        scalar_thrust = np.clip(scalar_thrust, -self.MAX_THRUST/1.3, self.MAX_THRUST/1.3)
+        scalar_thrust = np.clip(scalar_thrust, -self.MAX_THRUST, self.MAX_THRUST)*self.THRUST_SCALE
         return thrust, target_euler, pos_e, scalar_thrust
     
     ################################################################################
@@ -256,7 +258,8 @@ class DSLPIDControlDyn(BaseControl):
                          + np.multiply(self.D_COEFF_TOR, rpy_rates_e) \
                          + np.multiply(self.I_COEFF_TOR, self.integral_rpy_e)
         target_torques = np.clip(target_torques, -3200, 3200)
-        target_torques /= 6000
+        target_torques /= 3200
+        target_torques *= self.THRUST_SCALE
         target_torques = np.multiply(target_torques, np.array([self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE]))
         return target_torques
     
