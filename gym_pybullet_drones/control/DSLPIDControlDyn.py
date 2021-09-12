@@ -59,7 +59,7 @@ class DSLPIDControlDyn(BaseControl):
         elif self.DRONE_MODEL == DroneModel.CF2P:
             self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
             self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
-        self.THRUST_SCALE = 0.6
+        self.THRUST_SCALE = 0.7
         self.TORQUE_SCALE = 0.1
         self.reset()
 
@@ -259,7 +259,7 @@ class DSLPIDControlDyn(BaseControl):
                          + np.multiply(self.I_COEFF_TOR, self.integral_rpy_e)
         target_torques = np.clip(target_torques, -3200, 3200)
         target_torques /= 3200
-        target_torques *= self.THRUST_SCALE
+        target_torques *= self.TORQUE_SCALE
         target_torques = np.multiply(target_torques, np.array([self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE]))
         return target_torques
     
