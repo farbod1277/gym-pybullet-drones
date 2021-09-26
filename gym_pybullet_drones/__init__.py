@@ -11,6 +11,11 @@ register(
 )
 
 register(
+    id='dyn-aviary-w-goal-v0',
+    entry_point='gym_pybullet_drones.envs.imitation:DynAviaryWGoal',
+)
+
+register(
     id='velocity-aviary-v0',
     entry_point='gym_pybullet_drones.envs:VelocityAviary',
 )

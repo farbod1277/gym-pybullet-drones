@@ -24,6 +24,7 @@ import pdb
 import math
 import random
 
+import gym
 
 import numpy as np
 import pybullet as p
@@ -72,21 +73,37 @@ if __name__ == "__main__":
 
     #### Create the environment ##
     if ARGS.ctrl_mode == "dyn":
-        env = DynAviaryWGoal(num_wps=NUM_WP,
-                            wp_thresh=THRESH_WP,
-                            goal_poses=TARGET_POS,
-                            drone_model=ARGS.drone,
-                            initial_xyzs=INIT_XYZS,
-                            initial_rpys=INIT_RPYS,
-                            physics=ARGS.physics,
-                            neighbourhood_radius=10,
-                            freq=ARGS.simulation_freq_hz,
-                            aggregate_phy_steps=AGGR_PHY_STEPS,
-                            gui=ARGS.gui,
-                            record=ARGS.record_video,
-                            obstacles=ARGS.obstacles,
-                            user_debug_gui=ARGS.user_debug_gui
-                            )
+        env = gym.make('dyn-aviary-w-goal-v0',
+                        num_wps=NUM_WP,
+                        wp_thresh=THRESH_WP,
+                        goal_poses=TARGET_POS,
+                        drone_model=ARGS.drone,
+                        initial_xyzs=INIT_XYZS,
+                        initial_rpys=INIT_RPYS,
+                        physics=ARGS.physics,
+                        neighbourhood_radius=10,
+                        freq=ARGS.simulation_freq_hz,
+                        aggregate_phy_steps=AGGR_PHY_STEPS,
+                        gui=ARGS.gui,
+                        record=ARGS.record_video,
+                        obstacles=ARGS.obstacles,
+                        user_debug_gui=ARGS.user_debug_gui)
+                        
+        # env = DynAviaryWGoal(num_wps=NUM_WP,
+        #                     wp_thresh=THRESH_WP,
+        #                     goal_poses=TARGET_POS,
+        #                     drone_model=ARGS.drone,
+        #                     initial_xyzs=INIT_XYZS,
+        #                     initial_rpys=INIT_RPYS,
+        #                     physics=ARGS.physics,
+        #                     neighbourhood_radius=10,
+        #                     freq=ARGS.simulation_freq_hz,
+        #                     aggregate_phy_steps=AGGR_PHY_STEPS,
+        #                     gui=ARGS.gui,
+        #                     record=ARGS.record_video,
+        #                     obstacles=ARGS.obstacles,
+        #                     user_debug_gui=ARGS.user_debug_gui
+        #                     )
     else:
         env = CtrlAviary(drone_model=ARGS.drone,
                     num_drones=ARGS.num_drones,
