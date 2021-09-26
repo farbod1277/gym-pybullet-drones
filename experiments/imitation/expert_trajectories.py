@@ -121,7 +121,7 @@ if __name__ == "__main__":
     trajectories = Trajectory(obs=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS),23)),
                               acts=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1,4)),
                               infos=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1,1)),
-                              terminal=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1,1)))
+                              terminal=True)
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
     #### Save trajectories in a pickle file ########################
     with open(os.path.join(dirname, 'expert_trajectories.pkl'), "wb") as f:
-        pickle.dump(trajectories, f)
+        pickle.dump([trajectories], f)
 
     #### Close the environment #################################
     env.close()
