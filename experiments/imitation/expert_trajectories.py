@@ -53,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument('--obstacles',          default=False,       type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+    parser.add_argument('--duration_sec',       default=30,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
     parser.add_argument('--ctrl_mode',          default="dyn",      type=str)
     ARGS = parser.parse_args()
 
@@ -62,19 +62,20 @@ if __name__ == "__main__":
     INIT_RPYS = np.array([[0, 0, 0] for i in range(ARGS.num_drones)])
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
 
-    #### Initialize wapoint at centre of gate ######################
-    PERIOD = 10
-    NUM_WP = 1
-    wp_counter = 0
-    TARGET_POS = np.zeros((NUM_WP,3))
-    TARGET_POS[0, :] = np.array([2, 0, 1])
-    # TARGET_POS[1, :] = np.array([3, 5, 4])
+    #### Initialize wapoint params ######################
+    THRESH_WP = 0.4
+
+    #### Extract waypoints from csv
+    dirname = os.path.dirname(__file__)
+    TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
+    NUM_WP = np.shape(TARGET_POS)[0]
 
     #### Create the environment ##
     if ARGS.ctrl_mode == "dyn":
-        env = DynAviaryWGoal(goal_pose=TARGET_POS[0, :],
+        env = DynAviaryWGoal(num_wps=NUM_WP,
+                            wp_thresh=THRESH_WP,
+                            goal_poses=TARGET_POS,
                             drone_model=ARGS.drone,
-                            num_drones=ARGS.num_drones,
                             initial_xyzs=INIT_XYZS,
                             initial_rpys=INIT_RPYS,
                             physics=ARGS.physics,
@@ -112,9 +113,9 @@ if __name__ == "__main__":
     #### Initialize the controllers ############################
     if ARGS.drone in [DroneModel.CF2X, DroneModel.CF2P]:
         if ARGS.ctrl_mode == "dyn":
-            ctrl = [DSLPIDControlDyn(drone_model=ARGS.drone) for i in range(ARGS.num_drones)]
+            ctrl = DSLPIDControlDyn(drone_model=ARGS.drone)
         else:
-            ctrl = [DSLPIDControl(drone_model=ARGS.drone) for i in range(ARGS.num_drones)]
+            ctrl = DSLPIDControl(drone_model=ARGS.drone)
 
     #### Initialize data structure for storing expert Trajectories
     trajectories = Trajectory(obs=np.zeros((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS),23)),
@@ -124,34 +125,31 @@ if __name__ == "__main__":
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
-    action = {str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones)}
+    action = np.array([0,0,0,0])
     START = time.time()
     for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
         
         #### Step the simulation ###################################
         obs, _, done, _ = env.step(action)
 
-        trajectories.obs[int(i/AGGR_PHY_STEPS), :] = np.concatenate([obs[str(0)]["state"], obs[str(0)]["goal"]])
-        if int(i/5) < ((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1)): trajectories.acts[int(i/AGGR_PHY_STEPS), :] = action[str(0)]
-
-        # if i >= int(5*env.SIM_FREQ): wp_counter = 1
+        trajectories.obs[int(i/AGGR_PHY_STEPS), :] = obs
+        if int(i/5) < ((int(ARGS.duration_sec*env.SIM_FREQ/AGGR_PHY_STEPS) - 1)): trajectories.acts[int(i/AGGR_PHY_STEPS), :] = action
 
         #### Compute control at the desired frequency ##############
         if i%CTRL_EVERY_N_STEPS == 0:
 
             #### Compute control for the current way point #############
-            for j in range(ARGS.num_drones):
-                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
-                                                                       state=obs[str(j)]["state"],
-                                                                       target_pos=TARGET_POS[wp_counter, :],
-                                                                       target_rpy=INIT_RPYS[j, :]
-                                                                       )
+            action, _, _ = ctrl.computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
+                                                                    state=obs[0:20],
+                                                                    target_pos=obs[20:23],
+                                                                    target_rpy=INIT_RPYS[0, :]
+                                                                    )
 
         #### Log the simulation ####################################
         for j in range(ARGS.num_drones):
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
-                       state= obs[str(j)]["state"],
+                       state= obs[0:20],
                        control=np.hstack([TARGET_POS[0, 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
                        )
 
@@ -163,8 +161,11 @@ if __name__ == "__main__":
         if ARGS.gui:
             sync(i, START, env.TIMESTEP)
 
+        if done:
+            break
+
     #### Save trajectories in a pickle file ########################
-    with open("expert_trajectories.pkl", "wb") as f:
+    with open(os.path.join(dirname, 'expert_trajectories.pkl'), "wb") as f:
         pickle.dump(trajectories, f)
 
     #### Close the environment #################################
