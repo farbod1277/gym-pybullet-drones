@@ -52,8 +52,8 @@ class DynAviaryWGoal(DynAviary):
 
         """
         #### Action vector ######## Thrust           X Torque             Y Torque             Z Torque
-        act_lower_bound = np.array([0.,              -self.MAX_XY_TORQUE, -self.MAX_XY_TORQUE, -self.MAX_Z_TORQUE])
-        act_upper_bound = np.array([self.MAX_THRUST, self.MAX_XY_TORQUE,  self.MAX_XY_TORQUE,  self.MAX_Z_TORQUE])
+        act_lower_bound = np.array([0.,              -1.,                 -1.,                 -1.])
+        act_upper_bound = np.array([1.,              1.,                  1.,                  1.])
         return spaces.Box(low=act_lower_bound,
                           high=act_upper_bound,
                           dtype=np.float32)
@@ -78,10 +78,10 @@ class DynAviaryWGoal(DynAviary):
 
         """
         clipped_action = np.zeros((1, 4))
-        clipped_action[0, :] = nnlsRPM(thrust=action[0],
-                                            x_torque=action[1],
-                                            y_torque=action[2],
-                                            z_torque=action[3],
+        clipped_action[0, :] = nnlsRPM(thrust=action[0]*self.MAX_THRUST,
+                                            x_torque=action[1]*self.MAX_XY_TORQUE,
+                                            y_torque=action[2]*self.MAX_XY_TORQUE,
+                                            z_torque=action[3]*self.MAX_Z_TORQUE,
                                             counter=self.step_counter,
                                             max_thrust=self.MAX_THRUST,
                                             max_xy_torque=self.MAX_XY_TORQUE,

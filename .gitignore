@@ -10,6 +10,8 @@ files/videos/*.mp4
 # Learning results
 experiments/learning/results/save-*
 
+experiments/imitation/BC/*
+
 # macOS users
 .DS_Store
 

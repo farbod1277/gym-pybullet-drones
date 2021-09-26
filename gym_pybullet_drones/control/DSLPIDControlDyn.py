@@ -111,7 +111,7 @@ class DSLPIDControlDyn(DSLPIDControl):
                                           target_rpy_rates
                                           )
         cur_rpy = p.getEulerFromQuaternion(cur_quat)
-        return np.array([scalar_thrust, torques[0], torques[1], torques[2]]), pos_e, computed_target_rpy[2] - cur_rpy[2]
+        return np.array([scalar_thrust/self.MAX_THRUST, torques[0]/self.MAX_XY_TORQUE, torques[1]/self.MAX_XY_TORQUE, torques[2]/self.MAX_Z_TORQUE]), pos_e, computed_target_rpy[2] - cur_rpy[2]
     
     ################################################################################
 
