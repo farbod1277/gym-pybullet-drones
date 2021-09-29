@@ -10,9 +10,9 @@ class DynAviaryWGoal(DynAviary):
     ################################################################################
     
     def __init__(self,
-                 num_wps,
+                #  num_wps,
                  wp_thresh,
-                 goal_poses,
+                #  goal_poses,
                  drone_model: DroneModel=DroneModel.CF2X,
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
@@ -26,10 +26,15 @@ class DynAviaryWGoal(DynAviary):
                  user_debug_gui=True,
                  ):
 
-        self.num_wps = num_wps
+        # self.num_wps = num_wps
         self.current_wp = 0
         self.waypoint_thresh = wp_thresh
-        self.goal_poses = goal_poses
+        # self.goal_poses = goal_poses
+
+        last_wp_z = (np.random.rand()*4)+1
+        self.goal_poses = np.array([[0, 0, 0], [0, 0, last_wp_z], [0, 0, last_wp_z]])
+        self.num_wps = np.shape(self.goal_poses)[0]
+
         super().__init__(drone_model=drone_model,
                  neighbourhood_radius=neighbourhood_radius,
                  initial_xyzs=initial_xyzs,
@@ -141,6 +146,9 @@ class DynAviaryWGoal(DynAviary):
         bool
 
         """
+        if(self._getDroneStateVector(0)[2] < -0.5):
+            return True
+
         if(self.current_wp == self.num_wps - 1):
             return True
         else:

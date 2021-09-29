@@ -24,6 +24,7 @@ from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
+from stable_baselines3.common.policies import BaseModel
 
 
 if __name__ == "__main__":
@@ -56,15 +57,15 @@ if __name__ == "__main__":
 
     #### Extract waypoints from csv
     dirname = os.path.dirname(__file__)
-    TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
-    NUM_WP = np.shape(TARGET_POS)[0]
+    # TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
+    # NUM_WP = np.shape(TARGET_POS)[0]
 
     #### Create the environment ##
     if ARGS.ctrl_mode == "dyn":
         env = gym.make('dyn-aviary-w-goal-v0',
-                        num_wps=NUM_WP,
+                        # num_wps=NUM_WP,
                         wp_thresh=THRESH_WP,
-                        goal_poses=TARGET_POS,
+                        # goal_poses=TARGET_POS,
                         drone_model=ARGS.drone,
                         initial_xyzs=INIT_XYZS,
                         initial_rpys=INIT_RPYS,
@@ -77,7 +78,8 @@ if __name__ == "__main__":
                         obstacles=ARGS.obstacles,
                         user_debug_gui=ARGS.user_debug_gui)
 
-    model = bc.reconstruct_policy(os.path.join(dirname, "bc_model.pt"))
+    # model = bc.reconstruct_policy(os.path.join(dirname, "bc_model.pt"))
+    model = BaseModel.load(os.path.join(dirname, "gail_model.zip"))
     
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
@@ -93,3 +95,6 @@ if __name__ == "__main__":
 
             #### Compute control for the current way point #############
             action, _ = model.predict(observation=obs)
+
+        if done:
+            break

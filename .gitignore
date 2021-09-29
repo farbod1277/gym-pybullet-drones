@@ -11,6 +11,8 @@ files/videos/*.mp4
 experiments/learning/results/save-*
 
 experiments/imitation/BC/*
+experiments/imitation/GAIL/*
+experiments/imitation/AIRL/*
 
 # macOS users
 .DS_Store

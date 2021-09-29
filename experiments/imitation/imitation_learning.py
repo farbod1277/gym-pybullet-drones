@@ -76,13 +76,13 @@ if __name__ == "__main__":
 
     #### Extract waypoints from csv
     dirname = os.path.dirname(__file__)
-    TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
-    NUM_WP = np.shape(TARGET_POS)[0]
+    # TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
+    # NUM_WP = np.shape(TARGET_POS)[0]
 
-    venv = util.make_vec_env("dyn-aviary-w-goal-v0", n_envs=1,
-                                num_wps=NUM_WP,
+    venv = util.make_vec_env("dyn-aviary-w-goal-v0", n_envs=12,
+                                # num_wps=NUM_WP,
                                 wp_thresh=THRESH_WP,
-                                goal_poses=TARGET_POS,
+                                # goal_poses=TARGET_POS,
                                 drone_model=ARGS.drone,
                                 initial_xyzs=INIT_XYZS,
                                 initial_rpys=INIT_RPYS,
@@ -96,17 +96,30 @@ if __name__ == "__main__":
                                 user_debug_gui=ARGS.user_debug_gui)
 
 
-# Train BC on expert data.
-# BC also accepts as `expert_data` any PyTorch-style DataLoader that iterates over
-# dictionaries containing observations and actions.
-bc_logger = logger.configure(os.path.join(dirname,"./BC/"))
-bc_trainer = bc.BC(
-    venv.observation_space,
-    venv.action_space,
+# # Train BC on expert data.
+# # BC also accepts as `expert_data` any PyTorch-style DataLoader that iterates over
+# # dictionaries containing observations and actions.
+# bc_logger = logger.configure(os.path.join(dirname,"./BC/"))
+# bc_trainer = bc.BC(
+#     venv.observation_space,
+#     venv.action_space,
+#     expert_data=transitions,
+#     custom_logger=bc_logger,
+# )
+# bc_trainer.train(n_epochs=1000)
+# bc_trainer.save_policy(os.path.join(dirname, "bc_model.pt"))
+
+# Train GAIL on expert data.
+# GAIL, and AIRL also accept as `expert_data` any Pytorch-style DataLoader that
+# iterates over dictionaries containing observations, actions, and next_observations.
+gail_logger = logger.configure(os.path.join(dirname,"./GAIL/"))
+gail_trainer = adversarial.GAIL(
+    venv,
     expert_data=transitions,
-    custom_logger=bc_logger,
+    expert_batch_size=32,
+    gen_algo=sb3.PPO("MlpPolicy", venv, verbose=1, n_steps=1024),
+    custom_logger=gail_logger,
+    allow_variable_horizon=True
 )
-bc_trainer.train(n_epochs=1000)
-
-bc_trainer.save_policy(os.path.join(dirname, "bc_model.pt"))
-
+gail_trainer.train(total_timesteps=204800)
+gail_trainer.gen_algo.save(os.path.join(dirname, "gail_model.zip"))
