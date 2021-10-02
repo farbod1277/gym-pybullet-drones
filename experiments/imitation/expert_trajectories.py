@@ -54,7 +54,7 @@ if __name__ == "__main__":
     parser.add_argument('--obstacles',          default=False,       type=str2bool,     help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=30,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+    parser.add_argument('--duration_sec',       default=60,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
     parser.add_argument('--ctrl_mode',          default="dyn",      type=str)
     ARGS = parser.parse_args()
 
@@ -64,21 +64,17 @@ if __name__ == "__main__":
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
 
     #### Initialize wapoint params ######################
-    THRESH_WP = 0.4
+    THRESH_WP = 0.3
 
     #### Extract waypoints from csv
     dirname = os.path.dirname(__file__)
-    # TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
-    # NUM_WP = np.shape(TARGET_POS)[0]
 
     trajectories = []
     for traj_idx in range(0, 100):
         #### Create the environment ##
         if ARGS.ctrl_mode == "dyn":
             env = gym.make('dyn-aviary-w-goal-v0',
-                            # num_wps=NUM_WP,
                             wp_thresh=THRESH_WP,
-                            # goal_poses=TARGET_POS,
                             drone_model=ARGS.drone,
                             initial_xyzs=INIT_XYZS,
                             initial_rpys=INIT_RPYS,
@@ -91,21 +87,6 @@ if __name__ == "__main__":
                             obstacles=ARGS.obstacles,
                             user_debug_gui=ARGS.user_debug_gui)
                             
-            # env = DynAviaryWGoal(num_wps=NUM_WP,
-            #                     wp_thresh=THRESH_WP,
-            #                     goal_poses=TARGET_POS,
-            #                     drone_model=ARGS.drone,
-            #                     initial_xyzs=INIT_XYZS,
-            #                     initial_rpys=INIT_RPYS,
-            #                     physics=ARGS.physics,
-            #                     neighbourhood_radius=10,
-            #                     freq=ARGS.simulation_freq_hz,
-            #                     aggregate_phy_steps=AGGR_PHY_STEPS,
-            #                     gui=ARGS.gui,
-            #                     record=ARGS.record_video,
-            #                     obstacles=ARGS.obstacles,
-            #                     user_debug_gui=ARGS.user_debug_gui
-            #                     )
         else:
             env = CtrlAviary(drone_model=ARGS.drone,
                         num_drones=ARGS.num_drones,
@@ -181,7 +162,10 @@ if __name__ == "__main__":
         ## Append trajectory
         trajectories.append(trajectory)
 
-    #### Save trajectories in a pickle file ########################
-    with open(os.path.join(dirname, 'expert_trajectories.pkl'), "wb") as f:
-        pickle.dump(trajectories, f)
+        print("\n\n\n\n[TRAJECTORY_IDX]  " + str(traj_idx) + "\n\n\n\n")
+
+        #### Save trajectories in a pickle file ########################
+        if traj_idx in [59, 124, 249, 499, 999]:
+            with open(os.path.join(dirname, "expert_trajectories_circle_" + str(traj_idx) + ".pkl"), "wb") as f:
+                pickle.dump(trajectories, f)
 
