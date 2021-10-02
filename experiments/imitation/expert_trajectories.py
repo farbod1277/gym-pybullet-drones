@@ -70,7 +70,7 @@ if __name__ == "__main__":
     dirname = os.path.dirname(__file__)
 
     trajectories = []
-    for traj_idx in range(0, 100):
+    for traj_idx in range(0, 1000):
         #### Create the environment ##
         if ARGS.ctrl_mode == "dyn":
             env = gym.make('dyn-aviary-w-goal-v0',
@@ -166,6 +166,6 @@ if __name__ == "__main__":
 
         #### Save trajectories in a pickle file ########################
         if traj_idx in [59, 124, 249, 499, 999]:
-            with open(os.path.join(dirname, "expert_trajectories_circle_" + str(traj_idx) + ".pkl"), "wb") as f:
+            with open(os.path.join(dirname, "expert_trajectories_circle_" + str(traj_idx+1) + ".pkl"), "wb") as f:
                 pickle.dump(trajectories, f)
 
