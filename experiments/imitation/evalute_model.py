@@ -12,6 +12,7 @@ import math
 import random
 
 import gym
+import stable_baselines3 as sb3
 
 import numpy as np
 import pybullet as p
@@ -25,6 +26,7 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from stable_baselines3.common.policies import BaseModel
+from torch._C import import_ir_module
 
 
 if __name__ == "__main__":
@@ -60,7 +62,7 @@ if __name__ == "__main__":
     # TARGET_POS = np.genfromtxt(os.path.join(dirname, 'paths_circle.csv'), delimiter=',')
     # NUM_WP = np.shape(TARGET_POS)[0]
 
-    #### Create the environment ##
+    # #### Create the environment ##
     if ARGS.ctrl_mode == "dyn":
         env = gym.make('dyn-aviary-w-goal-v0',
                         # num_wps=NUM_WP,
@@ -79,7 +81,8 @@ if __name__ == "__main__":
                         user_debug_gui=ARGS.user_debug_gui)
 
     # model = bc.reconstruct_policy(os.path.join(dirname, "bc_model.pt"))
-    model = BaseModel.load(os.path.join(dirname, "gail_model.zip"))
+    
+    model = sb3.PPO.load(os.path.join(dirname, "gail_model.zip"))
     
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
