@@ -1,0 +1,12 @@
+--------------------------------------
+| mean/                   |          |
+|    disc/disc_acc        | 0.984    |
+|    disc/disc_acc_expert | 1        |
+|    disc/disc_acc_gen    | 0.969    |
+|    disc/disc_entropy    | 6.18e-05 |
+|    disc/disc_loss       | 0.591    |
+|    disc/disc_proport... | 0.5      |
+|    disc/global_step     | 793      |
+|    disc/n_expert        | 32       |
+|    disc/n_generated     | 32       |
+--------------------------------------

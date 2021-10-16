@@ -7,6 +7,6 @@
 # 4. run the script to create "video.mp4" in the same directory: $ ./ffmpeg_png2mp4.sh
 
 FRAME_RATE=24
-RESOLUTION=640x480
+RESOLUTION=1280x720
 
 ffmpeg -r $FRAME_RATE -f image2 -s $RESOLUTION -i frame_%d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p video.mp4

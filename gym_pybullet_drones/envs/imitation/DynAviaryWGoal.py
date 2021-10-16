@@ -26,12 +26,16 @@ class DynAviaryWGoal(DynAviary):
 
         self.current_wp = 0
         self.waypoint_thresh = wp_thresh
-        self.num_wps = 120
+        # self.num_wps = 120
+        self.num_wps = 3
 
-        R = (np.random.rand()*2.0) + 0.5
+        # R = (np.random.rand()*2.0) + 0.5
+        Z = (np.random.rand()*3.) + 0.5
+        X = (np.random.rand()*1.) - 0.5
         self.goal_poses = np.zeros((self.num_wps,3))
         for i in range(self.num_wps):
-            self.goal_poses[i, :] = R*np.cos((i/self.num_wps)*(2*np.pi)+np.pi/2), R*np.sin((i/self.num_wps)*(2*np.pi)+np.pi/2)-R, 1
+            # self.goal_poses[i, :] = R*np.cos((i/self.num_wps)*(2*np.pi)+np.pi/2), R*np.sin((i/self.num_wps)*(2*np.pi)+np.pi/2)-R, 1
+            self.goal_poses[i, :] = X, 0., Z
 
         super().__init__(drone_model=drone_model,
                  neighbourhood_radius=neighbourhood_radius,
@@ -144,7 +148,9 @@ class DynAviaryWGoal(DynAviary):
         bool
 
         """
-        if(self._getDroneStateVector(0)[2] < -0.5):
+        droneState = self._getDroneStateVector(0)
+
+        if((droneState[0] < -1000) | (droneState[0] > 1000) | (droneState[1] < -1000) | (droneState[1] > 1000) | (droneState[2] < -0.5) | (droneState[2] > 1000)):
             return True
 
         if(self.current_wp == self.num_wps - 1):

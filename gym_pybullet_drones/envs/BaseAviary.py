@@ -203,8 +203,8 @@ class BaseAviary(gym.Env):
             # if platform == "linux": p.setAdditionalSearchPath(pybullet_data.getDataPath()); plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin"); print("plugin=", plugin)
             if self.RECORD:
                 #### Set the camera parameters to save frames in DIRECT mode
-                self.VID_WIDTH=int(640)
-                self.VID_HEIGHT=int(480)
+                self.VID_WIDTH=int(1280)
+                self.VID_HEIGHT=int(720)
                 self.FRAME_PER_SEC = 24
                 self.CAPTURE_FREQ = int(self.SIM_FREQ/self.FRAME_PER_SEC)
                 self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=3,

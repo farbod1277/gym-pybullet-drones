@@ -1,0 +1,24 @@
+--------------------------------------
+| raw/                    |          |
+|    disc/disc_acc        | 0.656    |
+|    disc/disc_acc_expert | 1        |
+|    disc/disc_acc_gen    | 0.312    |
+|    disc/disc_entropy    | 0.234    |
+|    disc/disc_loss       | 0.829    |
+|    disc/disc_proport... | 0.5      |
+|    disc/global_step     | 52       |
+|    disc/n_expert        | 32       |
+|    disc/n_generated     | 32       |
+--------------------------------------
+--------------------------------------
+| raw/                    |          |
+|    disc/disc_acc        | 0.734    |
+|    disc/disc_acc_expert | 1        |
+|    disc/disc_acc_gen    | 0.469    |
+|    disc/disc_entropy    | 0.219    |
+|    disc/disc_loss       | 0.974    |
+|    disc/disc_proport... | 0.5      |
+|    disc/global_step     | 52       |
+|    disc/n_expert        | 32       |
+|    disc/n_generated     | 32       |
+--------------------------------------

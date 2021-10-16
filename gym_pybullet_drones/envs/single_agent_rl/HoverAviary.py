@@ -73,19 +73,18 @@ class HoverAviary(BaseSingleAgentAviary):
 
         """
         state = self._getDroneStateVector(0)
-        return -1 * np.linalg.norm(np.array([0, 0, 1])-state[0:3])**2
+        Z = (np.random.rand()*4.5) + 0.5
+        return -1 * np.linalg.norm(np.array([0, 0, Z])-state[0:3])**2
 
     ################################################################################
     
     def _computeDone(self):
-        """Computes the current done value.
+        
+        droneState = self._getDroneStateVector(0)
 
-        Returns
-        -------
-        bool
-            Whether the current episode is done.
+        if((droneState[0] < -1000) | (droneState[0] > 1000) | (droneState[1] < -1000) | (droneState[1] > 1000) | (droneState[2] < -0.5) | (droneState[2] > 1000)):
+            return True
 
-        """
         if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC:
             return True
         else:

@@ -216,6 +216,10 @@ class Logger(object):
 
         #### XYZ ###################################################
         row = 0
+
+        if (t.shape[0] > self.states.shape[2]):
+            t = t[:-1]
+
         for j in range(self.NUM_DRONES):
             axs[row, col].plot(t, self.states[j, 0, :], label="drone_"+str(j))
         axs[row, col].set_xlabel('time')

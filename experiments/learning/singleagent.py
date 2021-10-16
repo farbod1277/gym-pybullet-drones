@@ -25,7 +25,7 @@ import numpy as np
 import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.cmd_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197
+from stable_baselines3.common.env_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecTransposeImage
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3 import A2C
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     parser.add_argument('--env',        default='hover',      type=str,             choices=['takeoff', 'hover', 'flythrugate', 'tune'], help='Task (default: hover)', metavar='')
     parser.add_argument('--algo',       default='ppo',        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
     parser.add_argument('--obs',        default='kin',        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
-    parser.add_argument('--act',        default='one_d_rpm',  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
-    parser.add_argument('--cpu',        default='1',          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
+    parser.add_argument('--act',        default='dyn',        type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
+    parser.add_argument('--cpu',        default='12',         type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
     ARGS = parser.parse_args()
 
     #### Save directory ########################################
@@ -69,9 +69,9 @@ if __name__ == "__main__":
         os.makedirs(filename+'/')
 
     #### Print out current git commit hash #####################
-    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
-    with open(filename+'/git_commit.txt', 'w+') as f:
-        f.write(str(git_commit))
+    # git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+    # with open(filename+'/git_commit.txt', 'w+') as f:
+    #     f.write(str(git_commit))
 
     #### Warning ###############################################
     if ARGS.env == 'tune' and ARGS.act != ActionType.TUN:
@@ -241,7 +241,7 @@ if __name__ == "__main__":
                                  deterministic=True,
                                  render=False
                                  )
-    model.learn(total_timesteps=35000, #int(1e12),
+    model.learn(total_timesteps=int(1e12),
                 callback=eval_callback,
                 log_interval=100,
                 )

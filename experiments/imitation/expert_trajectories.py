@@ -48,7 +48,7 @@ if __name__ == "__main__":
     parser.add_argument('--vision',             default=False,      type=str2bool,      help='Whether to use VisionAviary (default: False)', metavar='')
     parser.add_argument('--gui',                default=False,       type=str2bool,     help='Whether to use PyBullet GUI (default: False)', metavar='')
     parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
-    parser.add_argument('--plot',               default=True,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
+    parser.add_argument('--plot',               default=False,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--user_debug_gui',     default=False,      type=str2bool,      help='Whether to add debug lines and parameters to the GUI (default: False)', metavar='')
     parser.add_argument('--aggregate',          default=True,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
     parser.add_argument('--obstacles',          default=False,       type=str2bool,     help='Whether to add obstacles to the environment (default: True)', metavar='')
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     ARGS = parser.parse_args()
 
     #### Initialize the simulation #############################
-    INIT_XYZS = np.array([[0, 0, 0] for i in range(ARGS.num_drones)])
+    INIT_XYZS = np.array([[0, 0, 0.02] for i in range(ARGS.num_drones)])
     INIT_RPYS = np.array([[0, 0, 0] for i in range(ARGS.num_drones)])
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
 
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         print("\n\n\n\n[TRAJECTORY_IDX]  " + str(traj_idx) + "\n\n\n\n")
 
         #### Save trajectories in a pickle file ########################
-        if traj_idx in [59, 124, 249, 499, 999]:
-            with open(os.path.join(dirname, "expert_trajectories_circle_" + str(traj_idx+1) + ".pkl"), "wb") as f:
+        if traj_idx in [9, 59, 124, 249, 499, 999]:
+            with open(os.path.join(dirname, "expert_trajectories_slanted_" + str(traj_idx+1) + ".pkl"), "wb") as f:
                 pickle.dump(trajectories, f)
 
